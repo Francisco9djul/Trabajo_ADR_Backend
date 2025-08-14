@@ -1,0 +1,21 @@
+# Entorno virtual
+venv/
+
+# Archivo de variables de entorno
+.env
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de migración que no querés versionar (opcional)
+*/migrations/__pycache__/
+*/migrations/*.pyc
+
+# Archivos SQLite (si los usaste)
+db.sqlite3
+
+# Archivos de logs
+*.log
