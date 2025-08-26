@@ -35,11 +35,17 @@ class RutinaSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'objetivo', 'usuario', 'bloques']
 
     def create(self, validated_data):
-        user = self.context['request'].user  # obtenemos el usuario que hace la petición
-        if user.role == 'profesor':
-            raise serializers.ValidationError("Los profesores no pueden crear rutinas.")
-        # Asignamos el usuario actual automáticamente 
-        validated_data['usuario'] = user
+        user = self.context['request'].user  # usuario que hace la petición
+
+        # Solo profesores pueden crear rutinas
+        if user.role != 'profesor':
+            raise serializers.ValidationError("Solo los profesores pueden crear rutinas.")
+
+        # Chequear que no se creen rutinas para sí mismos
+        usuario_destino = validated_data.get('usuario')
+        if usuario_destino == user:
+            raise serializers.ValidationError("No podés crear una rutina para vos mismo.")
+
         return super().create(validated_data)
 
 # Formulario
