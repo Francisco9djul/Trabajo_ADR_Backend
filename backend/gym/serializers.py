@@ -34,6 +34,14 @@ class RutinaSerializer(serializers.ModelSerializer):
         model = Rutina
         fields = ['id', 'nombre', 'objetivo', 'usuario', 'bloques']
 
+    def create(self, validated_data):
+        user = self.context['request'].user  # obtenemos el usuario que hace la petición
+        if user.role == 'profesor':
+            raise serializers.ValidationError("Los profesores no pueden crear rutinas.")
+        # Asignamos el usuario actual automáticamente 
+        validated_data['usuario'] = user
+        return super().create(validated_data)
+
 # Formulario
 class FormularioSerializer(serializers.ModelSerializer):
     class Meta:
