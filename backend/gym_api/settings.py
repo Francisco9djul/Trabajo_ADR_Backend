@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'gym',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'gym_api.urls'
@@ -152,3 +155,6 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,                # para seguridad
 }
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
