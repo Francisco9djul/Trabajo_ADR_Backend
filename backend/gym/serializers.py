@@ -10,32 +10,36 @@ class EjercicioSerializer(serializers.ModelSerializer):
 # BloqueEjercicio (asociativa)
 class BloqueEjercicioSerializer(serializers.ModelSerializer):
     ejercicio = EjercicioSerializer(read_only=True)
-    ejercicio_id = serializers.PrimaryKeyRelatedField(
+    ejercicioId = serializers.PrimaryKeyRelatedField(
         queryset=Ejercicio.objects.all(), source='ejercicio', write_only=True
     )
 
     class Meta:
         model = BloqueEjercicio
-        fields = ['id', 'bloque', 'ejercicio', 'ejercicio_id', 'series', 'repeticiones']
+        fields = ['id', 'series', 'repeticiones', 'ejercicio', 'ejercicioId']
 
 # Bloque
 class BloqueSerializer(serializers.ModelSerializer):
-    bloque_ejercicios = BloqueEjercicioSerializer(many=True, read_only=True)
+    bloque_ejercicios = BloqueEjercicioSerializer(many=True)
 
     class Meta:
         model = Bloque
-        fields = ['id', 'nombre', 'dia', 'rutina', 'bloque_ejercicios']
+        fields = ['id', 'nombre', 'dia', 'bloque_ejercicios']
 
 # Rutina
 class RutinaSerializer(serializers.ModelSerializer):
-    bloques = BloqueSerializer(many=True, read_only=True)
-    
+    # Para recibir bloques en POST
+    bloques = BloqueSerializer(many=True, write_only=True, required=False)
+    # Para mostrar bloques al hacer GET
+    bloques_read = BloqueSerializer(many=True, read_only=True, source='bloques')
+
     class Meta:
         model = Rutina
-        fields = ['id', 'nombre', 'objetivo', 'usuario', 'bloques']
+        fields = ['id', 'nombre', 'objetivo', 'usuario', 'bloques', 'bloques_read']
 
     def create(self, validated_data):
-        user = self.context['request'].user  # usuario que hace la petición
+        bloques_data = validated_data.pop('bloques', [])
+        user = self.context['request'].user
 
         # Solo profesores pueden crear rutinas
         if user.role != 'profesor':
@@ -46,7 +50,22 @@ class RutinaSerializer(serializers.ModelSerializer):
         if usuario_destino == user:
             raise serializers.ValidationError("No podés crear una rutina para vos mismo.")
 
-        return super().create(validated_data)
+        # Crear rutina
+        rutina = Rutina.objects.create(**validated_data)
+
+        # Crear bloques y ejercicios asociados
+        for bloque_data in bloques_data:
+            ejercicios_data = bloque_data.pop('bloque_ejercicios', [])
+            bloque = Bloque.objects.create(rutina=rutina, **bloque_data)
+            for e_data in ejercicios_data:
+                BloqueEjercicio.objects.create(
+                    bloque=bloque,
+                    ejercicio=e_data['ejercicio'],  # usar _id si es FK
+                    series=e_data['series'],
+                    repeticiones=e_data['repeticiones']
+                )
+        return rutina
+
 
 # Formulario
 class FormularioSerializer(serializers.ModelSerializer):
