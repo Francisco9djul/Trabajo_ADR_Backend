@@ -1,6 +1,6 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, UserCreateSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
 from .serializers import MyTokenObtainPairSerializer
 from rest_framework.decorators import api_view
@@ -8,7 +8,11 @@ from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+class UserCreateAPIView(generics.CreateAPIView):
+    serializer_class = UserCreateSerializer
+    permission_classes = [AllowAny]  # cualquier persona puede registrarse
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.filter(is_deleted=False)  #  Solo usuarios activos
